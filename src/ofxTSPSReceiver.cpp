@@ -1,15 +1,16 @@
+
 /***************************************************************************
  *
- *  ofxTSPSReceiver.cpp
- *	ofxTSPSReceiver 
+ *  Receiver.cpp
+ *	Receiver
  *  Rockwell LAB + IDEO LAB peopleVision project
- * 
+ *
  *  Created by Brett Renfer
  *  Adapted/Polished for by James George ( http://www.jamesgeorge.org )
  *  in collaboration with FlightPhase ( http://www.flightphase.com )
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are 
+ * modification, are permitted provided that the following conditions are
  * met:
  * 1. Redistributions of source code must retain the above copyright
  * notice, this list of conditions and the following disclaimer as
@@ -32,136 +33,144 @@
 
 #include "ofxTSPSReceiver.h"
 
-ofxTSPSReceiver::ofxTSPSReceiver(){
-	bSetup = false;
-	eventListener = NULL;
-	personTimeout = 3.5 * 1000; // in millis
-}
+namespace ofxTSPS {
 
-void ofxTSPSReceiver::connect( int port ){
-	setup(port);
-	bSetup = true;
-}
+    Receiver::Receiver(){
+        bSetup = false;
+        personTimeout = 3.5 * 1000; // in millis
+    }
 
-void ofxTSPSReceiver::setListener(ofxTSPSListener* listener)
-{
-	eventListener = listener;
-	ofAddListener(ofEvents.update, this, &ofxTSPSReceiver::update);
-}
+    void Receiver::connect( int port ){
+        setup(port);
+        bSetup = true;
+        ofAddListener(ofEvents().update, this, &Receiver::update);
+    }
 
-void ofxTSPSReceiver::draw(int width, int height){
-	ofPushStyle();
-	ofNoFill();
-	ofSetLineWidth(.5);
-	for(int i = 0; i < totalPeople(); i++){
-		ofxTSPSPerson* p = personAtIndex(i);
-		ofSetColor(0xffffff);
-		ofRect(p->boundingRect.x*width, p->boundingRect.y*height, p->boundingRect.width*width, p->boundingRect.height*height);
-		ofSetColor(0xff0000);
-		ofCircle((p->centroid.x*width)-2, (p->centroid.y*height)-2, 4);
-		ofSetColor(0xffff00);
-		ofBeginShape();
-		for (int j=0; j<p->contour.size(); j++){
-			ofVertex(p->contour[j].x*width, p->contour[j].y*height);
-		}
-		ofEndShape();
-	}
-	ofPopStyle();
-}
+    void Receiver::draw(int width, int height){
+        ofPushStyle();
+        ofNoFill();
+        ofSetLineWidth(.5);
+        for(int i = 0; i < totalPeople(); i++){
+            Person* p = personAtIndex(i);
+            p->draw(width, height);
+        }
+        ofPopStyle();
+    }
 
-ofxTSPSScene* ofxTSPSReceiver::getScene()
-{
-	return &scene;
-}
+    Scene* Receiver::getScene()
+    {
+        return &scene;
+    }
+    
+    
+    vector<Person*> & Receiver::getPeople(){
+        return trackedPeople;
+    }
 
-void ofxTSPSReceiver::update( ofEventArgs &e ){
-	
-	if(hasWaitingMessages()){
-		// check for waiting messages
-		while( hasWaitingMessages() ){
-			// get the next message
-			ofxOscMessage m;
-			getNextMessage( &m );
-			
-			if(m.getAddress() == "TSPS/scene/") {
-				scene.idleTime = m.getArgAsFloat(0);
-				scene.percentCovered = m.getArgAsFloat(1);
-			}
-			
-			
-			if (m.getAddress() == "TSPS/personEntered/" || 
-				m.getAddress() == "TSPS/personMoved/" || 
-				m.getAddress() == "TSPS/personUpdated/" || 
-				m.getAddress() == "TSPS/personWillLeave/"){
-				
-				int id = m.getArgAsInt32(0);
-				bool personIsNew = false;
-				ofxTSPSPerson* person = personWithID( id );
-				if(person == NULL){
-					person = new ofxTSPSPerson(id, trackedPeople.size());
-					trackedPeople.push_back(person);
-					personIsNew = true;
-				}
-				person->update( &m );
-				
-				if(eventListener != NULL){
-					if (m.getAddress() == "TSPS/personEntered/" || personIsNew){
-						eventListener->personEntered(person, &scene);
-					}
-					else if (m.getAddress() == "TSPS/personMoved/"){
-						eventListener->personMoved(person, &scene);
-					}
-					else if (m.getAddress() == "TSPS/personUpdated/"){
-						eventListener->personUpdated(person, &scene);
-						
-					}
-					else if (m.getAddress() == "TSPS/personWillLeave/"){
-						eventListener->personWillLeave(person, &scene);					
-					}
-				}
-				
-				if(m.getAddress() == "TSPS/personWillLeave/"){
-					for (int i = trackedPeople.size() - 1; i >= 0; i--){
-						if (trackedPeople[i]->pid == person->pid){
-							trackedPeople.erase(trackedPeople.begin() + i);
-							break;
-						}
-					}
-					delete person;				
-				}
-			}		
-		}
-	}
+    void Receiver::update( ofEventArgs &e ){
+        
+        if(hasWaitingMessages()){
+            // check for waiting messages
+            while( hasWaitingMessages() ){
+                // get the next message
+                ofxOscMessage m;
+                getNextMessage( &m );
+                
+                if(m.getAddress() == "/TSPS/scene/") {
+                    scene.percentCovered = m.getArgAsFloat(1);
+                }
+                
+                if (m.getAddress() == "/TSPS/personEntered/" ||
+                    m.getAddress() == "/TSPS/personUpdated/" ||
+                    m.getAddress() == "/TSPS/personWillLeave/"){
+                    
+                    int id = m.getArgAsInt32(0);
+                    bool personIsNew = false;
+                    Person* person = personWithID( id );
+                    if(person == NULL){
+                        person = new Person(id, trackedPeople.size());
+                        trackedPeople.push_back(person);
+                        personIsNew = true;
+                    }
+                    updatePersonFromOSC(person, m);
+                
+                    EventArgs args;
+                    args.person = person;
+                    args.scene = &scene;
+                    
+                    if (m.getAddress() == "/TSPS/personEntered/" || personIsNew){
+                        ofNotifyEvent(Events().personEntered, args, this);
+                    } else if (m.getAddress() == "/TSPS/personUpdated/"){
+                        ofNotifyEvent(Events().personUpdated, args, this);
+                        
+                    } else if (m.getAddress() == "/TSPS/personWillLeave/"){
+                        ofNotifyEvent(Events().personWillLeave, args, this);
+                    }
+                    
+                    if(m.getAddress() == "/TSPS/personWillLeave/"){
+                        for (int i = trackedPeople.size() - 1; i >= 0; i--){
+                            if (trackedPeople[i]->pid == person->pid){
+                                trackedPeople.erase(trackedPeople.begin() + i);
+                                break;
+                            }
+                        }
+                        delete person;
+                    }
+                }
+            }
+        }
+        
+        
+        //clear orphaned blobs
+//        for(int i = trackedPeople.size()-1; i >= 0; i--) {
+//            if(ofGetElapsedTimeMillis()-trackedPeople[i]->updatedAt > personTimeout) {
+//                EventArgs args;
+//                args.person = trackedPeople[i];
+//                args.scene = scene;
+//                trackedPeople.erase(trackedPeople.begin() + i);
+//                ofNotifyEvent(Events().personWillLeave, args, this);
+//                delete trackedPeople[i];
+//            }
+//        }
+    }
+    
+    void Receiver::updatePersonFromOSC( Person * p, ofxOscMessage & m ){
+        p->oid = m.getArgAsInt32(1);
+        p->age = m.getArgAsInt32(2);
+        p->centroid.set( m.getArgAsFloat(3), m.getArgAsFloat(4));
+        p->velocity.set( m.getArgAsFloat(5), m.getArgAsFloat(6));
+        p->depth = m.getArgAsFloat(7);
+        p->boundingRect.set(m.getArgAsFloat(8),m.getArgAsFloat(9),m.getArgAsFloat(10),m.getArgAsFloat(11));
+        p->setHaarRect(ofRectangle(m.getArgAsFloat(12),m.getArgAsFloat(13),m.getArgAsFloat(14),m.getArgAsFloat(15)));
+        p->opticalFlowVectorAccumulation.set(m.getArgAsFloat(16), m.getArgAsFloat(17));
+        p->highest.set(m.getArgAsFloat(18), m.getArgAsFloat(19));
+        
+        ofPolyline line;
+        for (int i=20; i<m.getNumArgs(); i+=2){
+            line.addVertex( ofPoint(m.getArgAsFloat(i),m.getArgAsFloat(i+1)) );
+        }
+        p->updateContour( line );
+    }
 
-	
-	//clear orphaned blobs
-	for(int i = trackedPeople.size()-1; i >= 0; i--) {
-		if(ofGetElapsedTimeMillis()-trackedPeople[i]->updatedAt > personTimeout) {
-			trackedPeople.erase(trackedPeople.begin() + i);
-			eventListener->personWillLeave(trackedPeople[i], &scene);
-		}
-	}	
-}
+    //callbacks to get people
+    Person* Receiver::personAtIndex(int i)
+    {
+        return trackedPeople[i];
+    }
 
+    Person* Receiver::personWithID(int pid)
+    {
+        for (int i = 0; i < trackedPeople.size(); i++){
+            if (trackedPeople[i]->pid == pid){
+                return trackedPeople[i];
+            }
+        }
+        return NULL;
+    }
 
-//callbacks to get people
-ofxTSPSPerson* ofxTSPSReceiver::personAtIndex(int i)
-{
-	return trackedPeople[i];
-}
-
-ofxTSPSPerson* ofxTSPSReceiver::personWithID(int pid)
-{
-	for (int i = 0; i < trackedPeople.size(); i++){
-		if (trackedPeople[i]->pid == pid){
-			return trackedPeople[i];
-		}
-	}
-	return NULL;
-}	
-
-int ofxTSPSReceiver::totalPeople()
-{
-	return trackedPeople.size();
+    int Receiver::totalPeople()
+    {
+        return trackedPeople.size();
+    }
 }
 

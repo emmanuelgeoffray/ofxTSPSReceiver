@@ -1,11 +1,8 @@
 /***************************************************************************
  *
- *  ofxPerson.h
+ *  ofxTSPS::Person.h
  *  Rockwell LAB + IDEO LAB peopleVision project
- * 
- *  Created by Brett Renfer
- *  Adapted/Polished for by James George ( http://www.jamesgeorge.org )
- *  in collaboration with FlightPhase ( http://www.flightphase.com )
+ *
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are 
@@ -28,60 +25,75 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  
+ * Web: http://github.com/labatrockwell/openTSPS
+ *
+ * (...)
+ *
  ***************************************************************************/
-
-//11/23/2009 modified by James George
-//Added:
-//	blob-based constuctor
-//	persistent id
-//	ghost frame protection from Haar objects
-//	normalized accessors
-//	countour points
-//	optical flow calculations
-
-//3/8/2009 - BR
-//	changed to work as addon
-//	- update via ofxTSPSPerson
-//	- added optical flow velocity
-
-//9/20/2010
-//James George
-//Updated as addon to be released
 
 #ifndef OFX_PERSON_OBJECT
 #define OFX_PERSON_OBJECT
 
-#include "ofMain.h"
 #include "ofxOsc.h"
-class ofxTSPSPerson
-{
-  public: 
-	ofxTSPSPerson();
-	ofxTSPSPerson(int pid, int oid);
-	
-	~ofxTSPSPerson();
-	
-	void update(ofxOscMessage* m);
-	ofPoint denormalizedCentroid(float width, float height); //used to return screen-space center points
-	vector<ofPoint> denormalizedContour(float width, float height); //used to return screen-space contours
-	
-	//this can be a pointer to whatever you want to store in this person
-	void* customAttributes;
 
-	ofPoint opticalFlowVectorAccumulation; //total amount of optical flow within the area of the person
-
-	int pid; //persistent id from frame to frame
-	int oid; //ordered id, used for TUIO messaging
-	int age; //how many frames has this person been in the system                
-	
-	ofPoint centroid; //center of mass of the person
-	ofRectangle boundingRect; //enclosing area
-	vector<ofPoint> contour; //shape contour
-	ofPoint velocity; //most recent movement of centroid
-	ofPoint opticalFlowVelocity; //accumulated optical flow velocity (set explicitly)
-	float area; //area as a scalar size
-
-	long updatedAt;
-};
+namespace ofxTSPS {
+    class Person {
+	public: 
+		Person( int pid, int oid );
+		~Person();
+		
+        virtual void update();
+        virtual void updateBoundingRect( ofRectangle _rect );
+        virtual void updateCentroid( ofPoint _centroid, bool dampen );
+        virtual void updateContour( ofPolyline _contour );
+        
+        virtual void draw( int cameraWidth, int cameraHeight, bool bSendContours=false, bool bSendHaar=false, float haarPadding=0 );
+        
+		//this can be a pointer to whatever you want to store in this person
+		void* customAttributes;
+        
+		virtual void setHaarRect(ofRectangle _haarRect);
+		virtual bool hasHaarRect();
+		virtual ofRectangle getHaarRect();
+		virtual void noHaarThisFrame();
+        
+		ofPoint opticalFlowVectorAccumulation;
+        
+		int pid; //persistent id from frame to frame
+		int oid; //ordered id, used for TUIO messaging
+		int age; //how many frames has this person been in the system                
+		
+		ofPoint centroid; //center of mass of the person
+		ofRectangle boundingRect; //enclosing area
+		ofPolyline contour; //shape contour
+		ofPolyline simpleContour; //simplified shape contour
+		ofPoint velocity; //most recent movement of centroid
+		float area; //area as a scalar size
+        
+        float depth; // raw depth from kinect
+        ofPoint highest;  // highest point in a blob (brightest pixel, will really only work correctly with kinect)
+        ofPoint lowest;  // lowest point in a blob (dark pixel, will really only work correctly with kinect)
+		
+		//normalized accessors for use in TUIO communication
+		ofRectangle getBoundingRectNormalized(float videoWidth, float videoHeight);
+		ofRectangle getHaarRectNormalized(float videoWidth, float videoHeight);
+		ofPoint getCentroidNormalized(float videoWidth, float videoHeight);
+		ofPoint getHaarCentroidNormalized(float videoWidth, float videoHeight);
+        
+        // get JSON        
+        virtual string getJSON( string type, ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours=false, string append="" );
+        virtual string getString( ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours=false ){ return ""; };
+        
+        // get OSC message(s)    
+        virtual vector<ofxOscMessage> getOSCMessages( string type, bool bUseLegacy, int cameraWidth, int cameraHeight, bool sendContours );
+        
+	protected:
+		
+		bool hasHaar;
+		ofRectangle haarRect;
+		int framesWithoutHaar; //how long have we gone without seeing Haar item
+		
+    };
+}
 
 #endif

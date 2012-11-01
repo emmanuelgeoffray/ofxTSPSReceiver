@@ -1,6 +1,8 @@
 #standard gitignore for Flightphase addons
 
 #xcode files
+DerivedData
+*.build
 *.mode*
 *.perspectivev3
 *.pbxuser
