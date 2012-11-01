@@ -141,9 +141,9 @@ namespace ofxTSPS {
         p->velocity.set( m.getArgAsFloat(5), m.getArgAsFloat(6));
         p->depth = m.getArgAsFloat(7);
         p->boundingRect.set(m.getArgAsFloat(8),m.getArgAsFloat(9),m.getArgAsFloat(10),m.getArgAsFloat(11));
-        p->setHaarRect(ofRectangle(m.getArgAsFloat(12),m.getArgAsFloat(13),m.getArgAsFloat(14),m.getArgAsFloat(15)));
-        p->opticalFlowVectorAccumulation.set(m.getArgAsFloat(16), m.getArgAsFloat(17));
-        p->highest.set(m.getArgAsFloat(18), m.getArgAsFloat(19));
+        p->highest.set(m.getArgAsFloat(12), m.getArgAsFloat(13));
+        p->setHaarRect(ofRectangle(m.getArgAsFloat(14),m.getArgAsFloat(15),m.getArgAsFloat(16),m.getArgAsFloat(17)));
+        p->opticalFlowVectorAccumulation.set(m.getArgAsFloat(18), m.getArgAsFloat(19));
         
         ofPolyline line;
         for (int i=20; i<m.getNumArgs(); i+=2){
