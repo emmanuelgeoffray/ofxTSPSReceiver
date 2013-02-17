@@ -1,9 +1,0 @@
-ofxTSPS Receiver
-==================================
-* Set of classes to interface with ofxTSPS in openFrameworks
-
-Setup
-=================
-* clone into openframeworks/addons
-* run openTSPS (see github.com/labatrockwell/openTSPS)
-* run example (ofxTSPSReceiver/example-simple)
