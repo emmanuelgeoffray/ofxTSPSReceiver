@@ -78,12 +78,6 @@ namespace ofxTSPS {
         ofPoint highest;  // highest point in a blob (brightest pixel, will really only work correctly with kinect)
         ofPoint lowest;  // lowest point in a blob (dark pixel, will really only work correctly with kinect)
 		
-		//normalized accessors for use in TUIO communication
-		ofRectangle getBoundingRectNormalized(float videoWidth, float videoHeight);
-		ofRectangle getHaarRectNormalized(float videoWidth, float videoHeight);
-		ofPoint getCentroidNormalized(float videoWidth, float videoHeight);
-		ofPoint getHaarCentroidNormalized(float videoWidth, float videoHeight);
-        
         // get JSON        
         virtual string getJSON( string type, ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours=false, string append="" );
         virtual string getString( ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours=false ){ return ""; };

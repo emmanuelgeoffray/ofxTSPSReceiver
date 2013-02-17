@@ -183,34 +183,6 @@ namespace ofxTSPS {
         }
     }
     
-    //--------------------------------------------------------------
-    ofRectangle Person::getBoundingRectNormalized(float videoWidth, float videoHeight){
-		return ofRectangle(boundingRect.x/videoWidth,
-						   boundingRect.y/videoHeight,
-						   boundingRect.width/videoWidth,
-						   boundingRect.height/videoHeight);
-    }
-    
-    
-    //--------------------------------------------------------------
-    ofRectangle Person::getHaarRectNormalized(float videoWidth, float videoHeight){
-        return ofRectangle(haarRect.x/videoWidth,
-                           haarRect.y/videoHeight,
-                           haarRect.width/videoWidth,
-                           haarRect.height/videoHeight);
-    };
-    
-    //--------------------------------------------------------------
-    ofPoint Person::getCentroidNormalized(float videoWidth, float videoHeight){
-        return ofPoint(centroid.x / videoWidth, centroid.y / videoHeight);
-    }
-    
-    //--------------------------------------------------------------
-    ofPoint Person::getHaarCentroidNormalized(float videoWidth, float videoHeight){
-        ofRectangle haarRect = getHaarRect();
-        return ofPoint( (haarRect.x + haarRect.width/2) / videoWidth, (haarRect.y + haarRect.height/2) / videoHeight );
-    }
-    
 #pragma mark get as string
     
     /***************************************************************
