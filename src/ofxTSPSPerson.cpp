@@ -144,8 +144,12 @@ namespace ofxTSPS {
     //--------------------------------------------------------------
     void Person::setHaarRect(ofRectangle _haarRect){
         haarRect = _haarRect;
-        hasHaar = true;
-        framesWithoutHaar = 0;
+        if ( haarRect.isEmpty() ){
+            noHaarThisFrame();
+        } else {
+            hasHaar = true;
+            framesWithoutHaar = 0;
+        }
     }
     
     //--------------------------------------------------------------
