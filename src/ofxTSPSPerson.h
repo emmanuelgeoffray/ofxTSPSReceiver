@@ -36,10 +36,6 @@
 
 #include "ofMain.h"
 
-#ifdef TSPS_USE_OSC
-#include "ofxOsc.h"
-#endif
-
 namespace ofxTSPS {
     class Person {
 	public: 
@@ -77,15 +73,6 @@ namespace ofxTSPS {
         float depth; // raw depth from kinect
         ofPoint highest;  // highest point in a blob (brightest pixel, will really only work correctly with kinect)
         ofPoint lowest;  // lowest point in a blob (dark pixel, will really only work correctly with kinect)
-		
-        // get JSON        
-        virtual string getJSON( string type, ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours=false, string append="" );
-        virtual string getString( ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours=false ){ return ""; };
-        
-        // get OSC message(s)
-#ifdef TSPS_USE_OSC
-        virtual vector<ofxOscMessage> getOSCMessages( string type, bool bUseLegacy, int cameraWidth, int cameraHeight, bool sendContours );
-#endif
         
 	protected:
 		
