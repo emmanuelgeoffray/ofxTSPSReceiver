@@ -252,6 +252,8 @@ namespace ofxTSPS {
         return message.str();
     }
     
+#ifdef TSPS_USE_OSC
+    
     /***************************************************************
      Get OSC Message(s)
      - why messages plural?
@@ -317,4 +319,6 @@ namespace ofxTSPS {
         
         return v;
     };
+#endif
+    
 }

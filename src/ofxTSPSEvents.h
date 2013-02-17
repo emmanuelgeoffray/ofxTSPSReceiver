@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ofEvents.h"
+#include "ofMain.h"
 
 namespace ofxTSPS {
     class Person;
@@ -21,6 +21,15 @@ namespace ofxTSPS {
 
         Person   * person;
         Scene    * scene;
+    };
+    
+    class CustomEventArgs {
+    public:
+        
+		CustomEventArgs(){};
+        
+        string              name;
+        vector<string>      args;
     };
     
     class CoreEvents {
@@ -37,6 +46,8 @@ namespace ofxTSPS {
         //called every frame no matter what.
         ofEvent<EventArgs>  personUpdated;
         
+        //called when a custom event occurs.
+        ofEvent<CustomEventArgs>  customEvent;
     };
     
     CoreEvents & Events();
@@ -50,8 +61,18 @@ void ofxAddTSPSListeners( ListenerClass * listener ){
 }
 
 template<class ListenerClass>
+void ofxAddTSPSCustomEventListener( ListenerClass * listener ){
+    ofAddListener(ofxTSPS::Events().customEvent, listener, &ListenerClass::onCustomEvent);
+}
+
+template<class ListenerClass>
 void ofxRemoveTSPSListeners( ListenerClass * listener ){
     ofRemoveListener(ofxTSPS::Events().personEntered, listener, &ListenerClass::onPersonEntered);
     ofRemoveListener(ofxTSPS::Events().personUpdated, listener, &ListenerClass::onPersonUpdated);
     ofRemoveListener(ofxTSPS::Events().personWillLeave, listener, &ListenerClass::onPersonWillLeave);
+}
+
+template<class ListenerClass>
+void ofxRemoveTSPSCustomEventListener( ListenerClass * listener ){
+    ofRemoveListener(ofxTSPS::Events().customEvent, listener, &ListenerClass::onCustomEvent);
 }

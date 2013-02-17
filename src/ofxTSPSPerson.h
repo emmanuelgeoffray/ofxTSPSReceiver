@@ -34,7 +34,11 @@
 #ifndef OFX_PERSON_OBJECT
 #define OFX_PERSON_OBJECT
 
+#include "ofMain.h"
+
+#ifdef TSPS_USE_OSC
 #include "ofxOsc.h"
+#endif
 
 namespace ofxTSPS {
     class Person {
@@ -84,8 +88,10 @@ namespace ofxTSPS {
         virtual string getJSON( string type, ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours=false, string append="" );
         virtual string getString( ofPoint centroid, int cameraWidth, int cameraHeight, bool bSendContours=false ){ return ""; };
         
-        // get OSC message(s)    
+        // get OSC message(s)
+#ifdef TSPS_USE_OSC
         virtual vector<ofxOscMessage> getOSCMessages( string type, bool bUseLegacy, int cameraWidth, int cameraHeight, bool sendContours );
+#endif
         
 	protected:
 		

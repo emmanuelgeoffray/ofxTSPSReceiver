@@ -3,7 +3,7 @@
 //--------------------------------------------------------------
 void testApp::setup(){
     ofBackground(0);
-    tspsReceiver.connect(12000);
+    tspsReceiver.connect( 12000 );
     
     // this will add listeners to your app; this is optional!
     // you will need to add all three of these functions to do this:
