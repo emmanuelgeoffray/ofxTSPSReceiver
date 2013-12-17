@@ -35,6 +35,7 @@
 #define OFX_PERSON_OBJECT
 
 #include "ofMain.h"
+#include "ofxOsc.h"
 
 namespace ofxTSPS {
     class Person {
@@ -74,6 +75,14 @@ namespace ofxTSPS {
         ofPoint highest;  // highest point in a blob (brightest pixel, will really only work correctly with kinect)
         ofPoint lowest;  // lowest point in a blob (dark pixel, will really only work correctly with kinect)
         
+		//normalized accessors for use in TUIO communication
+		ofRectangle getBoundingRectNormalized(float videoWidth, float videoHeight);
+		ofRectangle getHaarRectNormalized(float videoWidth, float videoHeight);
+		ofPoint getCentroidNormalized(float videoWidth, float videoHeight);
+		ofPoint getHaarCentroidNormalized(float videoWidth, float videoHeight);
+
+        // get OSC message(s)    
+        virtual vector<ofxOscMessage> getOSCMessages( string type, bool bUseLegacy, int cameraWidth, int cameraHeight, bool sendContours );
 	protected:
 		
 		bool hasHaar;
